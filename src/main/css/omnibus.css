@@ -1,0 +1,53 @@
+/* Slides */
+
+:root {
+    --symbol-fonts: "Arial Unicode", "Apple Symbols", "Symbol", "Symbola_hint";
+    --body-family: "Lucida Sans Unicode", sans-serif, var(--symbol-fonts);
+    --title-family: "Lucida Sans Unicode", sans-serif, var(--symbol-fonts);
+    --mono-family: "B612 Mono", monospace, var(--symbol-fonts);
+}
+
+html {
+    font-family: var(--body-family);
+}
+
+#om_main .list-of-titles {
+    display: none;
+}
+
+#om_pagenav div.toc,
+#om_sitenav div.toc {
+    font-size: 80%;
+}
+
+#om_pagenav div.toc ul,
+#om_sitenav div.toc ul {
+    list-style-type: none;
+    padding-left: 1em;
+}
+
+#om_pagenav div.toc > ul,
+#om_sitenav div.toc > ul {
+    padding-left: 0;
+}
+
+#om_pagenav div.toc .toc-hidden,
+#om_sitenav div.toc .toc-hidden {
+    display: none;
+}
+
+#om_pagenav div.toc li,
+#om_sitenav div.toc li {
+    white-space: nowrap;
+}
+
+.toc-arrow {
+    display: inline-block;
+    width: 1rem;
+    cursor: pointer;
+}
+
+a, a:visited, a:link {
+    color: blue;
+    text-decoration: underline;
+}

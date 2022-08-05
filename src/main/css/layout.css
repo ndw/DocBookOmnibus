@@ -1,0 +1,237 @@
+/* The page layout. Inspired by https://docs.asciidoctor.org/asciidoctor/ */
+
+:root {
+    --navbar-background: rgb(11, 0, 89);
+    --navbar-font-color: white;
+    --navbar-height: 3.5rem;
+
+    --main-background: #fff;
+
+    --sitenav-background: #fafafa;
+    --sitenav-font-color: black;
+    --sitenav-width: 15rem;
+    --sitenav-height: calc(1vh*100 - var(--navbar-height));
+
+    --toolbar-background: var(--sitenav-background);
+    --toolbar-font-color: #000;
+    --toolbar-border-color: #e1e1e1;
+    --toolbar-height: 2.5rem;
+
+    --drawer-height: var(--toolbar-height);
+    --panel-height:calc(100% - var(--drawer-height));
+
+    --article-max-width: 50rem;
+
+    --page-nav-background: var(--main-background);
+    --page-nav-font-color: black;
+    --page-nav-width: 9rem;
+    --page-nav-top: calc(var(--navbar-height) + var(--toolbar-height));
+
+    --footer-background: var(--navbar-background);
+    --footer-font-color: white;
+
+    --z-index-article: 1;
+    --z-index-nav: 2;
+    --z-index-toolbar: 3;
+    --z-index-footer: 5;
+    --z-index-navbar: 6;
+}
+
+html {
+    box-sizing: border-box;
+    height: 100vh;
+    min-height: 100vh;
+    scroll-behavior: smooth;
+    margin: 0;
+    padding: 0;
+    font-size: 14pt;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    padding-top: var(--navbar-height);
+    word-wrap: anywhere;
+}
+
+body > header > .navbar {
+    display: flex;
+    background: var(--navbar-background);
+    color: var(--navbar-font-color);
+    height: var(--navbar-height);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: var(--z-index-navbar)
+}
+
+body > header > .navbar .navbar-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 1.5rem;
+}    
+
+body > header > .navbar .navbar-item:first-child {
+    width: calc(var(--sitenav-width) - 2rem);
+    padding-left: 1rem;
+}
+
+/* ============================================================ */
+
+body > .page {
+    display: flex;
+}
+
+body > .page > .sitenav {
+    background: var(--sitenav-background);
+    color: var(--sitenav-font-color);
+    top: var(--navbar-height);
+    left: 0;
+    z-index: var(--z-index-nav);
+    width: var(--sitenav-width);
+    flex: none;
+    position: static;
+    visibility: visible;
+    height: var(--sitenav-height)
+}
+
+.nav {
+    background: var(--sitenav-background);
+    position: relative;
+    top: var(--navbar-height);
+    position: fixed;
+    width: inherit;
+    height: inherit
+}
+
+.nav .panels {
+    display: flex;
+    flex-direction: column;
+    height: inherit
+}
+
+.panels .panel {
+    padding: 1rem;
+    overflow: scroll;
+}
+
+/* ============================================================ */
+
+main {
+    background-color: var(--main-background);
+    width: calc(1vw*100 - var(--sitenav-width));
+}
+
+main > .flow {
+    display: flex;
+    flex-grow: 1;
+}
+
+main > .flow > aside.sidebar {
+    background-color: var(--page-nav-background);
+    color: var(--page-nav-font-color);
+    padding-top: 0;
+    padding-left: 0.5rem;
+    flex: 0 0 var(--page-nav-width);
+    order: 1;
+           
+}
+
+main > .flow > aside.sidebar > div {
+    padding-top: 1rem;
+    margin-right: .75rem;
+    position: sticky;
+    top: var(--page-nav-top)
+}
+
+main > .flow > aside.sidebar > div h3 {
+    margin-top: 0;
+}
+
+/* ============================================================ */
+
+main > .flow > .content {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex: auto;
+    hyphens: auto;
+    max-width: var(--article-max-width);
+    min-width: 0;
+    padding: 0 2rem 2rem;
+    z-index: var(--z-index-article);
+    min-height: calc(var(--sitenav-height) - var(--navbar-height));
+}
+
+main > .flow > .content > article {
+    flex-grow: 1;
+}
+
+main > .flow > .content > footer {
+    padding-top: 1rem;
+    border-top: 1px solid var(--toolbar-border-color);
+    max-width: var(--article-max-width);
+}
+
+/* ============================================================ */
+
+main > .toolbar {
+    align-items: center;
+    background-color: var(--toolbar-background);
+    color: var(--toolbar-font-color);
+    box-shadow: 0 1px 0 var(--toolbar-border-color);
+    display: flex;
+    height: var(--toolbar-height);
+    justify-content: flex-start;
+    position: sticky;
+    top: var(--navbar-height);
+    z-index: var(--z-index-toolbar)
+}
+
+.toolbar a, .toolbar a:visited, .toolbar a:link {
+    color: inherit;
+}
+
+.breadcrumbs {
+    display: block
+    flex: 1 1;
+    padding: 0 .5rem 0 .75rem;
+    line-height: var(--nav-line-height)
+}
+
+.breadcrumbs ul {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none
+}
+
+.breadcrumbs li {
+    display: inline;
+    margin: 0
+}
+
+.breadcrumbs li::after {
+    content: "/";
+    padding: 0 .5rem
+}
+
+.breadcrumbs li:last-of-type::after {
+    content: none
+}
+
+/* ============================================================ */
+
+body > footer {
+    background-color: var(--footer-background);
+    color: var(--footer-font-color);
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    z-index: var(--z-index-footer)
+}
+
+/* ============================================================ */

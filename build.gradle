@@ -1,0 +1,195 @@
+buildscript {
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+      url "https://dev.saxonica.com/maven"
+    }
+  }
+
+  dependencies {
+    classpath group: "com.saxonica", name: "Saxon-EE", version: saxonVersion
+    classpath group: 'org.docbook', name: 'docbook-xslTNG', version: xslTNGversion
+  }
+}
+
+plugins {
+  id "java"
+  id 'com.nwalsh.gradle.saxon.saxon-gradle' version '0.9.6'
+  id "de.undercouch.download" version "4.0.4"
+}
+
+import de.undercouch.gradle.tasks.download.Download
+import com.nwalsh.gradle.saxon.SaxonXsltTask
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url "https://dev.saxonica.com/maven"
+  }
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'xml-apis:xml-apis:1.4.01'
+  }
+}
+
+// Where can we find a Saxon license (for the XJ compiler)
+if (!hasProperty("saxonLicenseDir")) {
+  if (System.getenv("SAXON_LICENSE_DIR") != null) {
+    ext.saxonLicenseDir=System.getenv("SAXON_LICENSE_DIR")
+  } else {
+    ext.saxonLicenseDir=System.getenv('HOME') + "/java"
+  }
+}
+
+configurations {
+  saxonLic.extendsFrom(implementation)
+}
+
+dependencies {
+  implementation (
+    [group: "com.saxonica", name: "Saxon-EE", version: saxonVersion]
+  )
+  saxonLic (
+    files(saxonLicenseDir)
+  )
+}
+
+defaultTasks 'publish'
+
+saxon.configure("docbook") {
+  initializer 'org.docbook.xsltng.extensions.Register'
+}
+
+task publish(dependsOn: ["copyResources", "compileXslt", "book"]) {
+  // nop
+}
+
+task copyResources(type: Copy) {
+  into "${buildDir}/website"
+  from ("${projectDir}/src/main") {
+    exclude "xslt/**"
+  }
+  doFirst {
+    mkdir "${buildDir}/website"
+  }
+}
+
+if (xsltCompiler == "XX") {
+  task createPackageJson() {
+    doLast {
+      new File("package.json")
+        .withWriter("utf-8") { writer ->
+          writer.writeLine("{")
+          writer.writeLine("  \"name\": \"DocBookOmnibus\",")
+          writer.writeLine("  \"version\": \"${DocBookOmnibusVersion}\"")
+          writer.writeLine("}")
+        }
+    }
+  }
+  createPackageJson.onlyIf {
+    !file("package.json").exists()
+  }
+
+  task installXslt3(type: Exec, dependsOn: ["createPackageJson"]) {
+    commandLine "npm", "install", "xslt3"
+  }
+  installXslt3.onlyIf {
+    !file("node_modules/xslt3/xslt3.js").exists()
+  }
+
+  task compileXslt(type: Exec, dependsOn: ["installXslt3"]) {
+    inputs.file "${projectDir}/src/main/xslt/omnibus.xsl"
+    outputs.file "${buildDir}/website/xslt/omnibus.sef.json"
+    commandLine "node", "node_modules/xslt3/xslt3.js",
+      "-t", "-xsl:${projectDir}/src/main/xslt/omnibus.xsl",
+      "-export:${buildDir}/website/xslt/omnibus.sef.json",
+      "-nogo", "-ns:##html5", "-relocate:on"
+    doFirst {
+      mkdir "${buildDir}/website/xslt"
+    }
+  }
+
+  task cleanupNode() {
+    doLast {
+      delete "package.json"
+      delete "package-lock.json"
+      delete "node_modules"
+    }
+  }
+  clean.dependsOn cleanupNode
+} else if (xsltCompiler == "XJ") {
+  if (file(saxonLicenseDir + "/saxon-license.lic").exists()) {
+    task compileXslt(type: JavaExec) {
+      inputs.file "${projectDir}/src/main/xslt/omnibus.xsl"
+      outputs.file "${buildDir}/website/xslt/omnibus.sef.json"
+      classpath = configurations.saxonLic
+      mainClass = "com.saxonica.Transform"
+      args "-t",
+        "-xsl:${projectDir}/src/main/xslt/omnibus.xsl",
+        "-export:${buildDir}/website/xslt/omnibus.sef.json",
+        "-target:JS", "-nogo", "-relocate:on", "-ns:##html5"
+      doFirst {
+        mkdir "${buildDir}/website/xslt"
+      }
+    }
+  } else {
+    task compileXslt() {
+      doLast {
+        println("************************************************************")
+        println("* You must have a Saxon EE license to use the XJ compiler. *")
+        println("************************************************************")
+      }
+    }
+  }
+} else {
+  throw new GradleException("The xsltCompiler option must be 'XJ' or 'XX'.")
+}
+
+task book(
+  type: SaxonXsltTask
+) {
+  inputs.files fileTree(dir: "${projectDir}/src/main/xml")
+  inputs.files fileTree(dir: "${projectDir}/src/main/xslt")
+  outputs.file("${buildDir}/website/html/index.html")
+
+  pluginConfiguration "docbook"
+  input "${projectDir}/src/main/xml/book.xml"
+  stylesheet "${projectDir}/src/main/xslt/docbook.xsl"
+  output "${buildDir}/website/html/index.html"
+  parameters(
+    'mediaobject-input-base-uri': "file:${buildDir}/website/html/",
+    'mediaobject-output-base-uri': './',
+    'profile-outputformat': 'online',
+    'chunk': 'index.html',
+    'chunk-output-base-uri': "${projectDir}/build/website/html/"
+  )
+}
+
+// ============================================================ 
+// Download Saxon JS if necessary
+
+task downloadSaxonJs(type: Download) {
+  src "https://www.saxonica.com/saxon-js/download/SaxonJS-${saxonJsVersion}.zip"
+  dest "${buildDir}"
+  doFirst {
+    mkdir(buildDir)
+  }
+}
+downloadSaxonJs.onlyIf {
+  !file("${buildDir}/SaxonJS-${saxonJsVersion}.zip").exists()
+}
+
+task copySaxonJs(type: Copy, dependsOn: ["downloadSaxonJs"]) {
+  def zipFile = file("${buildDir}/SaxonJS-${saxonJsVersion}.zip")
+  from zipTree(zipFile)
+  into "${buildDir}/website/js"
+  include "**/*.js"
+  doFirst {
+    mkdir "${buildDir}/website"
+  }
+}
+copyResources.dependsOn copySaxonJs
