@@ -32,7 +32,7 @@ render those AsciiDoctor pages. Then it took me a couple of hours to
 customize the DocBook xslTNG stylesheets and write a SaxonJS XSLT
 stylesheet to render them.
 
-You an see [https://ndw.github.io/DocBookOmnibus](the results) for yourself.
+You an see [the results](https://ndw.github.io/DocBookOmnibus) for yourself.
 
 I’ve _just barely_ scratched the surface of what would need to be done
 to make this a complete solution.
